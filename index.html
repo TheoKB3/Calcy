@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.3.2/math.js"
+        integrity="sha512-Imer9iTeuCPbyZUYNTKsBWsAk3m7n1vOgPsAmw4OlkGSS9qK3/WlJZg7wC/9kL7nUUOyb06AYS8DyYQV7ELEbg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        #body {
+            background-color: ivory;
+        }
+    </style>
+</head>
+
+<body id="body">
+    <p>Using riemann sums, the area under the curve is estimated to be:</p>
+    <p id="text"></p>
+
+    <canvas width="500" height="500" id="canvas"></canvas>
+
+    <form>
+        <label for="equasion">Choose function: </label>
+        <select id="equasionSelect" name="equasion">
+            <option value="linear">y = 2x + 3</option>
+            <option value="xsquared" selected="selected">y = x^2</option>
+            <option value="xcubed">y = x(x+20)^2</option>
+            <option value="trig">y = sin(2*x) + cos(x)</option>
+
+            <option value="custom">Custom</option>
+        </select>
+
+        <p>Start: <input type="number" id="start" name="startVal" value="-5"></p>
+        <p>Stop: <input type="number" id="stop" name="stopVal" value="5"></p>
+        <p>Intervals: <label id="sliderVal"></label></p>
+        <input type="range" min="1" max="100" value="50" class="slider" id="theSlider" style="width: 175px"><br><br>
+
+        <div id="type">
+        <input type="radio" name="reimannType" value="left" checked="checked" title="left">
+        <label for="left">Left</label><br>
+        <input type="radio" name="reimannType" value="right" id="right">
+        <label for="right">Right</label><br>
+        <input type="radio" name="reimannType" value="center">
+        <label for="center">Center</label><br></div>
+
+    </form>
+
+    <script >const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        
+        const text = document.getElementById("text");// display the total area
+        const sliderVal = document.getElementById("sliderVal"); // display number of intervals
+        
+        const functionSeclect = document.getElementById("equasionSelect"); // get equasion
+        const rimtype = document.getElementById("type"); // type of riemann
+        const interVal = document.getElementById("theSlider"); // number of intervals
+        
+        var selectedFunc = 2;
+        var intervals = 5;
+        sliderVal.textContent = intervals;
+        interVal.value = intervals;
+        
+        
+        var start = -5;
+        var startbnt = document.getElementById("start");    //start and stop input (variables defined twice)
+        var stopPoint = 5;
+        var stopbnt = document.getElementById("stop");
+        
+        
+        startbnt.addEventListener("change", function () {
+            if (startbnt.value < stopPoint) {
+                start = Number(startbnt.value);
+                redo();
+        
+            } else {
+                startbnt.value = start;
+            }
+        });
+        
+        
+        stopbnt.addEventListener("change", function () {
+            if (stopbnt.value > start) {
+                stopPoint = Number(stopbnt.value);
+        
+                redo();
+        
+            } else {
+                stopbnt.value = stopPoint;
+            }
+        });
+        
+        
+        
+        interVal.addEventListener('change', function () {
+            intervals = interVal.value;
+            sliderVal.textContent = intervals;
+            redo();
+            console.log(intervals);
+        });
+        
+        
+        rimtype.addEventListener("change", function(){
+            // console.log(right.value);
+        });
+        
+        
+        var val;
+        functionSeclect.addEventListener('change', function () {
+            // linear = 1, xsquared = 2, xcubed = 3, trig = 4, custom = 5
+            val = functionSeclect.value;
+            if (val == "linear"){selectedFunc = 1}
+            else if(val == "xsquared"){selectedFunc = 2}
+            else if(val == "xcubed"){selectedFunc = 3}
+            else if(val == "trig"){selectedFunc = 4}
+            else{selectedFunc = 5};
+        
+            redo();
+        });
+        
+        
+        
+        function theFunction(x) {
+            if (selectedFunc == 1){
+                y = (2*x)+3;
+        
+            }else if(selectedFunc == 2){
+                y = x**2;
+        
+            }else if(selectedFunc == 3){
+                y = x*((x+20)**2);
+        
+            }else if (selectedFunc == 4){
+                y = math.sin(2*x) + math.cos(x);
+        
+            }else{      // THIS IS WHERE YOU ADD CUSTOM FUNCTIONS 
+                y = 3;
+        
+            };
+        
+            return y;
+        };
+        
+        
+        
+        
+        
+        function redo() {
+        
+            var range = stopPoint - start;
+            var gap = range / intervals;
+            var total = 0;
+            var area;
+        
+            for (i = 0; i < intervals; i++) {
+                area = (theFunction((start + (gap * i)))) * gap;
+                total = total + area;
+            };
+            text.innerHTML = total;
+        
+        
+        
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.beginPath();
+        
+            context.fillStyle = 'LightCyan';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+        
+            context.font = "14px Comic Sans MS";
+            context.fillStyle = "black";
+        
+        
+            var xtop = xbot = ybot = ytop = 0;
+            var xaxis;
+            var yaxis;
+        
+            xbot = (math.round((start - 5) / 10)) * 10;
+            xtop = (math.round((stopPoint + 5) / 10)) * 10;
+        
+            for (i = xbot; i < xtop; i += gap / 30) {
+                thispoint = theFunction(i);
+                if (thispoint < ybot) { ybot = thispoint };
+                if (thispoint > ytop) { ytop = thispoint };
+        
+            };
+        
+            ybot = (math.round((ybot - 5) / 10)) * 10;
+            ytop = (math.round((ytop + 5) / 10)) * 10;
+        
+        
+        
+            if (ytop >= 0 && ybot >= 0) {
+                xaxis = 470;
+            } else if (ytop >= 0 && ybot >= 0) {
+                xaxis = 30;
+            } else {
+                xaxis = 30 + ytop * (440 / math.abs(ytop - ybot));
+            };
+        
+            if (xtop >= 0 && xbot >= 0) {
+                yaxis = 30;
+            } else if (xtop >= 0 && xbot >= 0) {
+                yaxis = 470;
+            } else {
+                yaxis = 470 - xtop * (440 / math.abs(xtop - xbot));
+            };
+        
+        
+        
+            context.fillText(ytop, yaxis, 30);
+            context.fillText(ybot, yaxis, 470);
+            context.fillText(xbot, 35, (xaxis + 20));
+            context.fillText(xtop, 470, (xaxis + 20));
+        
+            context.moveTo(yaxis, 30);
+            context.lineTo(yaxis, 470);
+            context.stroke();
+        
+            context.moveTo(30, xaxis);
+            context.lineTo(470, xaxis);
+            context.stroke();
+        
+        
+            var distx = math.abs(xtop - xbot);
+            var disty = math.abs(ytop - ybot);
+            context.moveTo(30, (xaxis - (theFunction(xbot) * (440 / math.abs(ytop - ybot)))));
+        
+            for (z = 1; z < 440; z += 1) {
+                context.lineTo((z + 30), (xaxis - ((440 / disty) * theFunction((xbot + (z * (distx / 440)))))));
+            };
+        
+            context.stroke();
+        
+        
+            context.fillStyle = 'rgba(0, 255, 128, .2)';
+        
+            for (i = 0; i < intervals; i += 1) {
+                left = start + (i * gap); //in number
+                yofbox = theFunction(left); // in number
+        
+                if (yofbox >= 0) {
+                    x = yaxis + (left * (440 / distx));
+                    y = xaxis - (yofbox * (440 / disty));
+                    w = gap * (440 / distx);
+                    h = xaxis - y;
+        
+                } else {
+                    x = yaxis + (left * (440 / distx));
+                    y = xaxis;
+                    w = gap * (440 / distx);
+                    h = -yofbox * (440 / disty);
+                };
+        
+                context.fillRect(x, y, w, h);
+        
+                context.moveTo(x, y)
+                context.lineTo(x, y + h);
+                context.lineTo(x + w, y + h);
+                context.lineTo(x + w, y);
+                context.lineTo(x, y);
+                context.stroke();
+        
+            };
+        
+        };
+        
+        redo();</script>
+</body>
+</html>
